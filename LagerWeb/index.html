@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ЛагерьБет</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Login Screen -->
+        <div id="screen-login" class="screen active">
+            <div class="login-container">
+                <div class="logo">
+                    <span class="logo-icon">&#127920;</span>
+                    <h1>ЛагерьБет</h1>
+                    <p class="subtitle">Виртуальная букмекерская контора</p>
+                </div>
+                <div class="login-form">
+                    <input type="text" id="login-username" placeholder="Никнейм" autocomplete="off">
+                    <input type="password" id="login-password" placeholder="Пароль (необязательно)" autocomplete="off">
+                    <button onclick="login()" class="btn btn-primary btn-full">Войти</button>
+                    <p class="login-hint">Пароль нужен только для админа. Для обычного игрока — оставьте пустым.</p>
+                    <div class="login-divider"><span>или</span></div>
+                    <button onclick="register()" class="btn btn-secondary btn-full">Регистрация</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main App -->
+        <div id="screen-main" class="screen">
+            <header class="header">
+                <div class="header-left">
+                    <span class="logo-sm">&#127920;</span>
+                    <span class="header-title">ЛагерьБет</span>
+                </div>
+                <div class="header-right">
+                    <span id="header-balance" class="balance-badge">0 &#129689;</span>
+                    <span id="header-username" class="username-badge"></span>
+                    <button onclick="logout()" class="btn-icon" title="Выйти">&#10140;</button>
+                </div>
+            </header>
+
+            <nav class="nav">
+                <button class="nav-btn active" onclick="showPage('events')" data-page="events">&#128202; События</button>
+                <button class="nav-btn" onclick="showPage('mybets')" data-page="mybets">&#127915; Ставки</button>
+                <button class="nav-btn" onclick="showPage('balance')" data-page="balance">&#128176; Баланс</button>
+                <button class="nav-btn" onclick="showPage('leaderboard')" data-page="leaderboard">&#127942; Топ</button>
+                <button class="nav-btn" onclick="showPage('bonus')" data-page="bonus">&#127873; Бонус</button>
+                <button class="nav-btn admin-only" onclick="showPage('admin')" data-page="admin" style="display:none">&#9881; Админ</button>
+            </nav>
+
+            <main class="content">
+                <div id="page-events" class="page active">
+                    <h2>&#128202; Активные события</h2>
+                    <div id="events-list" class="cards-container"></div>
+                </div>
+
+                <div id="page-mybets" class="page">
+                    <h2>&#127915; Мои ставки</h2>
+                    <div class="filter-bar">
+                        <button class="filter-btn active" onclick="filterBets('all', this)">Все</button>
+                        <button class="filter-btn" onclick="filterBets('pending', this)">&#128992; Активные</button>
+                        <button class="filter-btn" onclick="filterBets('won', this)">&#128994; Выигранные</button>
+                        <button class="filter-btn" onclick="filterBets('lost', this)">&#128308; Проигранные</button>
+                    </div>
+                    <div id="bets-list" class="bets-container"></div>
+                </div>
+
+                <div id="page-balance" class="page">
+                    <h2>&#128176; Баланс и история</h2>
+                    <div id="balance-info" class="balance-card"></div>
+                    <h3>&#128203; История транзакций</h3>
+                    <div id="transactions-list" class="transactions-container"></div>
+                </div>
+
+                <div id="page-leaderboard" class="page">
+                    <h2>&#127942; Топ богачей</h2>
+                    <div id="leaderboard-list" class="leaderboard-container"></div>
+                </div>
+
+                <div id="page-bonus" class="page">
+                    <h2>&#127873; Ежедневный бонус</h2>
+                    <div class="bonus-card">
+                        <div class="bonus-icon">&#127873;</div>
+                        <p class="bonus-text">Получите <strong>1000 &#129689;</strong> каждый день!</p>
+                        <button onclick="claimBonus()" class="btn btn-primary btn-lg" id="bonus-btn">Получить бонус</button>
+                    </div>
+                </div>
+
+                <div id="page-admin" class="page">
+                    <h2>&#9881; Админ-панель</h2>
+                    <div class="admin-grid">
+                        <div class="admin-card" onclick="showAdminTab('create')">
+                            <span class="admin-icon">&#10133;</span>
+                            <span>Создать событие</span>
+                        </div>
+                        <div class="admin-card" onclick="showAdminTab('complete')">
+                            <span class="admin-icon">&#9989;</span>
+                            <span>Завершить событие</span>
+                        </div>
+                        <div class="admin-card" onclick="showAdminTab('balance')">
+                            <span class="admin-icon">&#128176;</span>
+                            <span>Управление балансом</span>
+                        </div>
+                    </div>
+
+                    <div id="admin-create" class="admin-form hidden">
+                        <h3>&#10133; Новое событие</h3>
+                        <input type="text" id="ev-title" placeholder="Название события">
+                        <input type="text" id="ev-deadline" placeholder="Дедлайн (напр. 2 часа)">
+                        <div id="outcomes-container">
+                            <div class="outcome-row">
+                                <input type="text" placeholder="Исход (напр. Отряд 1)" class="outcome-name">
+                                <input type="number" placeholder="Коэфф." class="outcome-coeff" step="0.1" min="1.01">
+                            </div>
+                        </div>
+                        <button onclick="addOutcomeRow()" class="btn btn-secondary btn-full">+ Добавить исход</button>
+                        <button onclick="createEvent()" class="btn btn-primary btn-full">Создать событие</button>
+                    </div>
+
+                    <div id="admin-complete" class="admin-form hidden">
+                        <h3>&#9989; Завершить событие</h3>
+                        <div id="admin-events-list"></div>
+                    </div>
+
+                    <div id="admin-balance" class="admin-form hidden">
+                        <h3>&#128176; Управление балансом</h3>
+                        <select id="admin-user-select"></select>
+                        <input type="number" id="admin-amount" placeholder="Сумма (+ или -)">
+                        <input type="text" id="admin-reason" placeholder="Причина">
+                        <div class="btn-row">
+                            <button onclick="adminUpdateBalance(1)" class="btn btn-success">Начислить</button>
+                            <button onclick="adminUpdateBalance(-1)" class="btn btn-danger">Списать</button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- Bet Modal -->
+        <div id="bet-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="modal-title">Оформление ставки</h3>
+                    <button onclick="closeModal()" class="btn-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p id="modal-info"></p>
+                    <p id="modal-balance"></p>
+                    <div class="bet-amounts">
+                        <button onclick="setBetAmount(100)" class="btn-amount">100</button>
+                        <button onclick="setBetAmount(500)" class="btn-amount">500</button>
+                        <button onclick="setBetAmount(1000)" class="btn-amount">1000</button>
+                        <button onclick="setBetAmount('all')" class="btn-amount btn-all">ВСЁ</button>
+                    </div>
+                    <input type="number" id="bet-amount" placeholder="Введите сумму" min="1">
+                    <p id="modal-potential" class="potential-win"></p>
+                </div>
+                <div class="modal-footer">
+                    <button onclick="closeModal()" class="btn btn-secondary">Отмена</button>
+                    <button onclick="confirmBet()" class="btn btn-primary">Поставить</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="toast" class="toast hidden"></div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
